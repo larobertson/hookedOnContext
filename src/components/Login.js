@@ -1,5 +1,8 @@
 import React from "react";
+import {AuthContext} from "../App";
+
 export const Login = () => {
+  const {dispatch} = React.useContext(AuthContext);
   const initialState = {
     email: "",
     password: "",
@@ -7,17 +10,57 @@ export const Login = () => {
     errorMessage: null
   };
   const [data, setData] = React.useState(initialState);
+
   const handleInputChange = event => {
     setData({
       ...data,
       [event.target.name]: event.target.value
     });
   };
+
+  const handleFormSubmit = event => {
+    event.preventDefault();
+    setData({
+      ...data,
+      isSubmitting: true,
+      errorMessage: null
+    });
+    fetch('https://hookedbe.herokuapp.com/api/login', {
+      method: "post",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        username: data.email,
+        password: data.password
+      })
+    })
+    .then(res => {
+      if (res.ok) {
+        return res.json();
+      }
+      throw res;
+    })
+    .then(resJson => {
+      dispatch({
+        type: "LOGIN",
+        payload: resJson
+      })
+    })
+    .catch(error => {
+      setData({
+        ...data,
+        isSubmitting: false,
+        errorMessage: error.message || error.statusText
+      });
+    });
+  }
+
 return (
     <div className="login-container">
       <div className="card">
         <div className="container">
-          <form>
+          <form onSubmit={handleFormSubmit}>
             <h1>Login</h1>
 			
     		<label htmlFor="email">
